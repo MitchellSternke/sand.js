@@ -1,0 +1,160 @@
+<html>
+<head>
+    <script src="./sand.js"></script>
+    <script type="text/javascript">
+        function draw() {
+            sandbox.setParticle(99, 1, ParticleType.SAND);
+            sandbox.setParticle(100, 1, ParticleType.SAND);
+            sandbox.setParticle(101, 1, ParticleType.SAND);
+
+            sandbox.setParticle(299, 1, ParticleType.WATER);
+            sandbox.setParticle(300, 1, ParticleType.WATER);
+            sandbox.setParticle(301, 1, ParticleType.WATER);
+
+            sandbox.setParticle(499, 1, ParticleType.SALT);
+            sandbox.setParticle(500, 1, ParticleType.SALT);
+            sandbox.setParticle(501, 1, ParticleType.SALT);
+
+            sandbox.setParticle(699, 1, ParticleType.OIL);
+            sandbox.setParticle(700, 1, ParticleType.OIL);
+            sandbox.setParticle(701, 1, ParticleType.OIL);
+
+            sandbox.update();
+
+            var canvas = document.getElementById("canvas1");
+            var context = canvas.getContext("2d");
+            context.putImageData(sandbox.imageData, 0, 0);
+
+            // Get the pen size
+            //
+            var penSelect = document.getElementById("penSelect");
+            var penSize = parseInt(penSelect.options[penSelect.selectedIndex].value);
+            
+            // Do any drawing from the user if necessary
+            //
+            if (mouseIsDown) {
+                var elementSelect = document.getElementById("elementSelect");
+                var typeString = elementSelect.options[elementSelect.selectedIndex].value;
+                var particleType = ParticleType[typeString.toUpperCase()];
+                sandbox.pen = particleType;
+                var style = particleType.toString(16);
+                while (style.length < 6) {
+                    // Prepend any needed zeroes
+                    //
+                    style = "0" + style;
+                }
+                context.strokeStyle = "#" + style;
+
+                context.lineCap = "round";
+                context.lineWidth = penSize;
+                context.beginPath();
+                if (oldPenX == -1 && oldPenY == -1) {
+                    context.moveTo(penX, penY);
+                } else {
+                    context.moveTo(oldPenX, oldPenY);
+                }
+                context.lineTo(penX, penY);
+                context.stroke();
+
+                sandbox.setImageData(context.getImageData(0, 0, canvas.width, canvas.height));
+            }
+
+            // Draw the cursor
+            //
+            if (penX != -1 && penY != -1) {
+                var penSizeHalf = penSize / 2 | 0;
+                context.beginPath();
+                context.rect(penX - penSizeHalf, penY - penSizeHalf, penSize, penSize);
+                context.lineWidth = 1;
+                context.strokeStyle = "white";
+                context.stroke();
+            }
+
+            oldPenX = penX;
+            oldPenY = penY;
+
+            window.requestAnimationFrame(draw);
+        }
+
+        function mouseDown(event) {
+            var x = event.x;
+            var y = event.y;
+
+            var canvas = document.getElementById("canvas1");
+
+            x -= canvas.offsetLeft;
+            y -= canvas.offsetTop;
+
+            penX = x;
+            penY = y;
+
+            mouseIsDown = true;
+        }
+
+        function mouseUp(event) {
+            penX = -1;
+            penY = -1;
+
+            mouseIsDown = false;
+        }
+
+        function mouseMove(event) {
+            var x = event.x;
+            var y = event.y;
+
+            var canvas = document.getElementById("canvas1");
+
+            x -= canvas.offsetLeft;
+            y -= canvas.offsetTop;
+
+            penX = x;
+            penY = y;
+        }
+
+        window.onload = function() {
+            var canvas = document.getElementById("canvas1");
+
+            sandbox = new Sandbox(canvas);
+
+            penX = -1;
+            penY = -1;
+            oldPenX = -1;
+            oldPenY = -1;
+            mouseIsDown = false;
+
+            canvas.addEventListener("mousedown", mouseDown);
+            canvas.addEventListener("mouseup", mouseUp);
+            canvas.addEventListener("mousemove", mouseMove);
+
+            window.requestAnimationFrame(draw);
+        }
+    </script>
+
+    <title>sand.js</title>
+</head>
+
+<body>
+    <canvas id="canvas1" width="800" height="800"></canvas>
+    <br>
+    <label>Element</label>
+    <select id="elementSelect">
+        <option value="wall">Wall</option>
+        <option value="empty">Eraser</option>
+        <option value="sand">Sand</option>
+        <option value="water">Water</option>
+        <option value="salt">Salt</option>
+        <option value="oil">Oil</option>
+        <option value="plant">Plant</option>
+        <option value="fire">Fire</option>
+        <option value="torch">Torch</option>
+        <option value="spout">Spout</option>
+    </select>
+    <label>Pen Size</label>
+    <select id="penSelect">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="40">40</option>
+    </select>
+</body>
+</html>
